@@ -1,6 +1,8 @@
 data/kaist-rgbt
 data/LLVIP
+data/**
 pretrained/pretrained.pth.tar
 src/__pycache__
 src/wandb
 src/utils/__pycache__
+

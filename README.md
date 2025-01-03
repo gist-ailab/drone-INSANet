@@ -65,6 +65,8 @@ nvidia-docker run -it --name insanet -v $PWD:/workspace -p 8888:8888 -e NVIDIA_V
 ```
 conda env create -f environment.yml
 conda activate insanet
+conda install pytorch==1.11.0 torchvision==0.12.0 torchaudio==0.11.0 cudatoolkit=11.3 -c pytorch
+
 ```
 
 If your environment support CUDA 11.3,
