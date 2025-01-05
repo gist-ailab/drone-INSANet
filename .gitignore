@@ -5,4 +5,5 @@ pretrained/pretrained.pth.tar
 src/__pycache__
 src/wandb
 src/utils/__pycache__
+src/exps
 

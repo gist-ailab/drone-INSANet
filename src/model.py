@@ -373,7 +373,7 @@ class INSANet(nn.Module):
     The INSA network - encapsulates the INSA network.
     """
 
-    def __init__(self, n_classes):
+    def __init__(self, n_classes=3):
         super(INSANet, self).__init__()
 
         self.n_classes = n_classes

@@ -10,7 +10,8 @@ from utils.transforms import *
 # Dataset path
 PATH = edict()
 
-PATH.DB_ROOT = '../data/kaist-rgbt'
+# PATH.DB_ROOT = '../data/kaist-rgbt'
+PATH.DB_ROOT = '/SSDb/jemo_maeng/src/Project/Drone24/detection/drone-INSANet/data/kaist-rgbt'
 PATH.JSON_GT_FILE = os.path.join('kaist_annotations_test20.json')
 
 # train
@@ -23,7 +24,7 @@ train.img_set = f"train-all-02.txt"
 train.checkpoint = None
 
 # Set train arguments
-train.batch_size = 8       # batch size
+train.batch_size = 4       # batch size
 train.start_epoch = 0      # start at this epoch
 train.epochs = 40          # number of epochs to run
 

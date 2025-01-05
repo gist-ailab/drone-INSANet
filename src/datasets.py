@@ -43,7 +43,8 @@ class KAISTPed(data.Dataset):
         
         self.ids = list()
         
-        for line in open(os.path.join('./imageSets', self.image_set)):
+        # for line in open(os.path.join('./imageSets', self.image_set)):
+        for line in open(os.path.join('/SSDb/jemo_maeng/src/Project/Drone24/detection/drone-INSANet/data/kaist-rgbt/imageSets', self.image_set)):
             self.ids.append((self.args.path.DB_ROOT, line.strip().split('/')))
 
     def __str__(self):
