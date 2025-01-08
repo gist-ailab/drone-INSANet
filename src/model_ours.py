@@ -352,7 +352,7 @@ class VGGATTINSA(nn.Module):
     VGG base convolutions to produce lower-level feature maps.
     """
     def __init__(self,device,  attention =['CBAM', 'CHANNEL', 'SPATIAL'], pos = ['first', 'last', 'all'], fusion = ['add', 'cat']):
-        super(VGGEdited, self).__init__()
+        super(VGGATTINSA, self).__init__()
         self.attention = attention
         self.pos = pos
         self.fusion = fusion

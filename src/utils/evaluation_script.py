@@ -601,7 +601,7 @@ def evaluate(test_annotation_file: str, user_submission_file: str, phase_codenam
         + '#'*len(title_str) + '\n\n'
     print(msg)
 
-    return eval_result
+    return eval_result, msg
 
 
 def draw_all(eval_results, save_path, filename='figure.jpg'):

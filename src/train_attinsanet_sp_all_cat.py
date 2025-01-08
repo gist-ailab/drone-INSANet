@@ -55,7 +55,7 @@ def main():
 
     if checkpoint is None:
         # Initialize model
-        model = ATTINSANet(device, n_classes=args.n_classes, attention = 'SPATIAL', pos = 'last', fusion = 'cat')
+        model = ATTINSANet(device, n_classes=args.n_classes, attention = 'SPATIAL', pos = 'all', fusion = 'cat')
         # Initialize the optimizer
         biases = list()
         not_biases = list()
@@ -144,7 +144,7 @@ def main():
             
             save_results(results, result_filename)
             
-            eval_result, msg = evaluate(config.PATH.JSON_GT_FILE, result_filename, phase)
+            eval_result, msg = evaluate(config.PATH.JSON_GT_FILE, result_filename, phase) 
             logger.info(msg = msg)
 
     
