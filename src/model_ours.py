@@ -133,10 +133,10 @@ class VGGEdited(nn.Module):
         self.load_pretrained_layers()
 
         # # INtra-INter Attention (INSA) module
-        self.insa = INSA(n_iter=2,
-                         dim=256,
-                         n_head=1,
-                         ffn_dim=4)
+        # self.insa = INSA(n_iter=2,
+        #                  dim=256,
+        #                  n_head=1,
+        #                  ffn_dim=4)
 
         self.pre_att_rgb = self.GetPosition()
         self.pre_att_ir = self.GetPosition()
@@ -174,6 +174,8 @@ class VGGEdited(nn.Module):
                 channel = 256
             elif self.pos == 'all':
                 channel = 64+128+256
+            elif self.pos == 'first':
+                channel = 64 + 256
             channel = channel * 2
         if self.attention == 'CBAM':
             att= CBAM(channel).to("cuda")
@@ -217,8 +219,7 @@ class VGGEdited(nn.Module):
         # out_vis = F.relu(self.conv3_1_bn_vis(self.conv3_1_vis(out_vis_2))) 
         out_vis_3 = F.relu(self.conv3_2_bn_vis(self.conv3_2_vis(out_vis_3))) 
         out_vis_3 = F.relu(self.conv3_3_bn_vis(self.conv3_3_vis(out_vis_3)))
-        # if self.pos == 'last' or self.pos == 'all':
-        #     out_vis_3 = self.pre_att_rgb(out_vis_3)
+
         if self.pos == 'last' or self.pos == 'all':
             self.pre_att_rgb[-1] = self.pre_att_rgb[-1].to(out_vis_3.device)
             out_vis_3 = self.pre_att_rgb[-1](out_vis_3)
@@ -253,7 +254,7 @@ class VGGEdited(nn.Module):
         out_lwir = F.relu(self.conv1x1_lwir(out_lwir_3))
 
 
-        out_vis, out_lwir = self.insa(out_vis, out_lwir)
+        # out_vis, out_lwir = self.insa(out_vis, out_lwir)
 
         if self.fusion == 'cat':
             if self.pos == 'all':
@@ -262,14 +263,23 @@ class VGGEdited(nn.Module):
                 out_lwir_1 = F.interpolate(out_lwir_1, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
                 out_vis_2 = F.interpolate(out_vis_2, size=(out_vis.size(2), out_vis.size(3)), mode='bilinear')
                 out_lwir_2 = F.interpolate(out_lwir_2, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
-                out = torch.cat((out_vis_1, out_lwir_1, out_vis_2, out_lwir_2, out_vis_3, out_lwir_3), 1)
+                out = torch.cat((out_vis_1, out_lwir_1, out_vis_2, out_lwir_2, out_vis, out_lwir), 1)
                 out = self.post_att(out)
                 out = self.reduction_conv(out)
             elif self.pos == 'last':
                 out = torch.cat((out_vis, out_lwir), 1)
                 out = self.post_att(out)
                 out = self.reduction_conv(out)
-        
+            elif self.pos == 'first':
+                out_vis_1 = F.interpolate(out_vis_1, size=(out_vis.size(2), out_vis.size(3)), mode='bilinear')
+                out_lwir_1 = F.interpolate(out_lwir_1, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
+                print(out_vis_1.shape, out_lwir_1.shape, out_vis.shape, out_lwir.shape)
+    
+                out = torch.cat((out_vis_1, out_lwir_1, out_vis, out_lwir), 1)
+                print(out.shape)
+                out = self.post_att(out)
+                out = self.reduction_conv(out)
+
         elif self.fusion == 'add':
             out = out_vis + out_lwir
             out = self.post_att(out)
@@ -462,11 +472,11 @@ class VGGATTINSA(nn.Module):
         # Load pretrained layers
         self.load_pretrained_layers()
 
-        # # INtra-INter Attention (INSA) module
-        # self.insa = INSA(n_iter=2,
-        #                  dim=256,
-        #                  n_head=1,
-        #                  ffn_dim=4)
+        # INtra-INter Attention (INSA) module
+        self.insa = INSA(n_iter=2,
+                         dim=256,
+                         n_head=1,
+                         ffn_dim=4)
 
         self.pre_att_rgb = self.GetPosition()
         self.pre_att_ir = self.GetPosition()
@@ -517,7 +527,6 @@ class VGGATTINSA(nn.Module):
         return att, channel
 
         
-
     def forward(self, image_vis, image_lwir):
         """
         Forward propagation.
@@ -546,8 +555,10 @@ class VGGATTINSA(nn.Module):
         else:
             out_vis_3 = F.relu(self.conv3_1_bn_vis(self.conv3_1_vis(out_vis_2))) 
 
+        # out_vis = F.relu(self.conv3_1_bn_vis(self.conv3_1_vis(out_vis_2))) 
         out_vis_3 = F.relu(self.conv3_2_bn_vis(self.conv3_2_vis(out_vis_3))) 
         out_vis_3 = F.relu(self.conv3_3_bn_vis(self.conv3_3_vis(out_vis_3)))
+
         if self.pos == 'last' or self.pos == 'all':
             self.pre_att_rgb[-1] = self.pre_att_rgb[-1].to(out_vis_3.device)
             out_vis_3 = self.pre_att_rgb[-1](out_vis_3)
@@ -581,6 +592,9 @@ class VGGATTINSA(nn.Module):
         out_vis = F.relu(self.conv1x1_vis(out_vis_3))
         out_lwir = F.relu(self.conv1x1_lwir(out_lwir_3))
 
+
+        out_vis, out_lwir = self.insa(out_vis, out_lwir)
+
         if self.fusion == 'cat':
             if self.pos == 'all':
                 #match all sizees into layer3
@@ -588,24 +602,25 @@ class VGGATTINSA(nn.Module):
                 out_lwir_1 = F.interpolate(out_lwir_1, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
                 out_vis_2 = F.interpolate(out_vis_2, size=(out_vis.size(2), out_vis.size(3)), mode='bilinear')
                 out_lwir_2 = F.interpolate(out_lwir_2, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
-                out = torch.cat((out_vis, out_lwir, out_vis_1, out_lwir_1, out_vis_2, out_lwir_2), 1)
+                out = torch.cat((out_vis_1, out_lwir_1, out_vis_2, out_lwir_2, out_vis, out_lwir), 1)
                 out = self.post_att(out)
                 out = self.reduction_conv(out)
             elif self.pos == 'last':
                 out = torch.cat((out_vis, out_lwir), 1)
                 out = self.post_att(out)
                 out = self.reduction_conv(out)
-        
+            elif self.pos == 'first':
+                out_vis_1 = F.interpolate(out_vis_1, size=(out_vis.size(2), out_vis.size(3)), mode='bilinear')
+                out_lwir_1 = F.interpolate(out_lwir_1, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
+                out = torch.cat((out_vis_1, out_lwir_1, out_vis, out_lwir))
+                out = self.post_att(out)
+                out = self.reduction_conv(out)
+
         elif self.fusion == 'add':
             out = out_vis + out_lwir
             out = self.post_att(out)
-        
         else:
-            out = torch.add(out_vis * 0.5, out_lwir * 0.5)
-
-        # out_vis, out_lwir = self.insa(out_vis, out_lwir)
-        # Weighted summation
-        # out = torch.add(out_vis * self.weight, out_lwir * (1 - self.weight))
+            out = torch.add(out_vis * self.weight, out_lwir *(self.weight) )
         # weight-sharing network
         out = self.pool3(out)
 
@@ -645,8 +660,6 @@ class VGGATTINSA(nn.Module):
         conv10_feats = out
         
         return conv4_3_feats, conv6_feats, conv7_feats, conv8_feats, conv9_feats, conv10_feats
-
-
     def load_pretrained_layers(self):
         """
         As in the paper, we use a VGG-16 pretrained on the ImageNet task as the base network.
@@ -676,8 +689,7 @@ class VGGATTINSA(nn.Module):
         
         self.load_state_dict(state_dict)
 
-        print("Load Model: ATTINSANet\n")
-
+        print("Load Model: ATTINSA\n")
 
 
 class ATTNet(INSANet):
