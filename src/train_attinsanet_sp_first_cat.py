@@ -18,6 +18,7 @@ from inference import val_epoch, save_results
 
 from model import INSANet, MultiBoxLoss
 from model_ours import ATTNet
+from model_ours import ATTINSANet
 
 
 from utils import utils
@@ -54,7 +55,7 @@ def main():
 
     if checkpoint is None:
         # Initialize model
-        model = ATTNet(device, n_classes=args.n_classes, attention='SPATIAL', pos='first', fusion='cat')
+        model = ATTINSANet(device, n_classes=args.n_classes, attention = 'SPATIAL', pos = 'first', fusion = 'cat')
         # Initialize the optimizer
         biases = list()
         not_biases = list()
@@ -143,8 +144,9 @@ def main():
             
             save_results(results, result_filename)
             
-            eval_result, msg = evaluate(config.PATH.JSON_GT_FILE, result_filename, phase) 
+            eval_result, msg = evaluate(config.PATH.JSON_GT_FILE, result_filename, phase)
             logger.info(msg = msg)
+
     
 
 def train_epoch(epoch: int,

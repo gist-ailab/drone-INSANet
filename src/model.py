@@ -247,7 +247,6 @@ class VGGBase(nn.Module):
         
         self.load_state_dict(state_dict)
 
-        print("Load Model: INSANet\n")
 
 
 class PredictionConvolutions(nn.Module):

@@ -143,9 +143,9 @@ def main():
             
             save_results(results, result_filename)
             
-            evaluate(config.PATH.JSON_GT_FILE, result_filename, phase) 
+            eval_result, msg = evaluate(config.PATH.JSON_GT_FILE, result_filename, phase) 
+            logger.info(msg = msg)
     
-
 def train_epoch(epoch: int,
                 model: ATTNet,
                 dataloader: torch.utils.data.DataLoader,

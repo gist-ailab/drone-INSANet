@@ -252,10 +252,7 @@ class VGGEdited(nn.Module):
 
         out_vis = F.relu(self.conv1x1_vis(out_vis_3))
         out_lwir = F.relu(self.conv1x1_lwir(out_lwir_3))
-
-
         # out_vis, out_lwir = self.insa(out_vis, out_lwir)
-
         if self.fusion == 'cat':
             if self.pos == 'all':
                 #match all sizees into layer3
@@ -272,11 +269,8 @@ class VGGEdited(nn.Module):
                 out = self.reduction_conv(out)
             elif self.pos == 'first':
                 out_vis_1 = F.interpolate(out_vis_1, size=(out_vis.size(2), out_vis.size(3)), mode='bilinear')
-                out_lwir_1 = F.interpolate(out_lwir_1, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
-                print(out_vis_1.shape, out_lwir_1.shape, out_vis.shape, out_lwir.shape)
-    
+                out_lwir_1 = F.interpolate(out_lwir_1, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')    
                 out = torch.cat((out_vis_1, out_lwir_1, out_vis, out_lwir), 1)
-                print(out.shape)
                 out = self.post_att(out)
                 out = self.reduction_conv(out)
 
@@ -514,6 +508,8 @@ class VGGATTINSA(nn.Module):
                 channel = 256
             elif self.pos == 'all':
                 channel = 64+128+256
+            elif self.pos == 'first':
+                channel = 64 + 256
             channel = channel * 2
         if self.attention == 'CBAM':
             att= CBAM(channel).to("cuda")
@@ -612,9 +608,11 @@ class VGGATTINSA(nn.Module):
             elif self.pos == 'first':
                 out_vis_1 = F.interpolate(out_vis_1, size=(out_vis.size(2), out_vis.size(3)), mode='bilinear')
                 out_lwir_1 = F.interpolate(out_lwir_1, size=(out_lwir.size(2), out_lwir.size(3)), mode='bilinear')
-                out = torch.cat((out_vis_1, out_lwir_1, out_vis, out_lwir))
+                print(out_vis_1.shape, out_vis.shape)
+                out = torch.cat((out_vis_1, out_lwir_1, out_vis, out_lwir), 1)
                 out = self.post_att(out)
                 out = self.reduction_conv(out)
+
 
         elif self.fusion == 'add':
             out = out_vis + out_lwir
